@@ -43,6 +43,15 @@ if (cookie) {
     phantom.cookies = JSON.parse(cookie);
 }
 
+casper.on('resource.requested', function (requestData, request) {
+    
+    if (/(\.gif|\.png|\.jpg)\?*/.test(requestData.url)) {
+        request.abort();
+    } else {
+        // casper.echo(requestData.url, 'ERROR');
+    }
+});
+
 casper.userAgent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/56.0.2924.87 Safari/537.36';
 casper.start('https://order.jd.com/center/list.action').then(function() {
     if (checkLogin()) {
@@ -97,6 +106,9 @@ function checkLogin() {
     if (/passport\.jd\.com/g.exec(currenturl)) {
         console.log('login error');
         return false;
+    } else if (/safe\.jd\.com/g.exec(currenturl)) {
+        casper.echo('visit this url for security verify:' + currenturl);
+        casper.echo('login error, need phonecode for security', 'ERROR').exit(1);
     } else {
         console.log('login success');
         return true;
@@ -105,18 +117,24 @@ function checkLogin() {
 
 // 签到
 function checkIn() {
-    casper.thenOpen('https://vip.jd.com', function(){
-        casper.waitForSelector('.checkin-ready', function() {
-            this.click('.checkin-ready');
-            casper.capture('/tmp/2.png');
-            casper.echo('checkin success');
-        }, function timeout() {
-            if (casper.exists('.checkined')) {
-                casper.echo('今日已经签到');
-            } else {
-                casper.echo('系统错误');
-            }
-        }, 3000);
+    casper.viewport(1920, 1080).thenOpen('https://vip.jd.com', function(){
+        var token = casper.evaluate(function() {
+            return pageConfig.token;
+        });
+        var url = 'https://vip.jd.com/common/signin.html?token=' + token;
+
+        var result = this.evaluate(function(url) {
+            return JSON.parse(__utils__.sendAJAX(url, 'GET', null, false));
+        }, url);
+
+        if (result.success) {
+            casper.echo('签到成功');
+        } else if (result.resultCode == '1603') {
+            casper.echo('今日已经签到');
+        } else {
+            casper.echo('resultTips');
+        }
+        casper.exit(1);
     });
 }
 
