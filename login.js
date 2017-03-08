@@ -132,7 +132,7 @@ function checkIn() {
         } else if (result.resultCode == '1603') {
             casper.echo('今日已经签到');
         } else {
-            casper.echo('resultTips');
+            casper.echo(result.resultTips);
         }
         casper.exit(1);
     });
