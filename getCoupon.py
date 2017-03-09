@@ -14,9 +14,7 @@ def getCoupon(categoryId, pagenum, cookies):
       for item in result['couponItem']:
          if item['receiveFlag'] or item['rate'] == 100:
             continue
-         info = u'正在领取：' + item['limitStr']
-         if item.has_key('successLabel'):
-            info = info + '[' + item['successLabel'] + ']'
+         info = u'正在领取：' + item['limitStr'] + '[' + item.get('successLabel', '') + ']'
          print info
          params = {
             'couponId':  item['id'],
@@ -26,6 +24,9 @@ def getCoupon(categoryId, pagenum, cookies):
          }
          url = 'http://coupon.m.jd.com/center/receiveCoupon.json'
          r = requests.post(url, data=params, cookies=cookies)
+         if json.loads(r.text)['status'] == 302:
+            print u'登陆状态异常'
+            exit()
          print r.text
          time.sleep(1)
 
@@ -33,11 +34,8 @@ def getCoupon(categoryId, pagenum, cookies):
       getCoupon(categoryId, pagenum, cookies)
 
 def getCookies(file):
-   file_object = open(file)
-   try:
+   with open(file) as file_object:
       file_context = file_object.read()
-   finally:
-      file_object.close()
 
    cookie_list = json.loads(file_context)
    cookies = {}
