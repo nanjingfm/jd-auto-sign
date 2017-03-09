@@ -71,12 +71,12 @@ function login() {
     });
 
     casper.then(function() {
-        casper.capture('/tmp/1.png');
+        if (casper.exists('#autoLogin'))
+            this.click('#autoLogin');
         if (casper.exists('.verify-code') && casper.visible('.verify-code')) {
             var captcha_url = this.getElementAttribute('.verify-code', 'src');
             casper.echo(captcha_url);
             casper.thenOpen(captcha_url, function(){
-                this.capture('/tmp/captcha.png');
                 casper.echo(JSON.stringify({
                     'status': 'find-captcha',
                     'cookie': phantom.cookies
@@ -158,6 +158,7 @@ function getCookies() {
 
 function printDate() {
     var date = new Date();
+    casper.echo('当前用户：' + username);
     casper.echo('当前时间：' + date.getFullYear() + '-' + (date.getMonth() + 1) + '-' + date.getDate());
 }
 
