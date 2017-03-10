@@ -15,7 +15,7 @@ def getCoupon(categoryId, pagenum, cookies):
          if item['receiveFlag'] or item['rate'] == 100:
             continue
          info = u'正在领取：' + item['limitStr'] + '[' + item.get('successLabel', '') + ']'
-         print info
+         print info, 
          params = {
             'couponId':  item['id'],
             'roleId': item['roleId'],
@@ -24,10 +24,16 @@ def getCoupon(categoryId, pagenum, cookies):
          }
          url = 'http://coupon.m.jd.com/center/receiveCoupon.json'
          r = requests.post(url, data=params, cookies=cookies)
-         if json.loads(r.text)['status'] == 302:
+         result = json.loads(r.text)
+         if result.has_key('status') and result['status'] == 302:
             print u'登陆状态异常'
             exit()
-         print r.text
+         print '[领取结果]', 
+         if result['isSuccess'] == 'T':
+            print '\033[1;32m成功\033[0m'
+         else:
+            print '\033[1;31m失败,[失败原因]', result['desc'], '\033[0m'
+         # 喝杯茶，喘喘气
          time.sleep(1)
 
       pagenum += 1
